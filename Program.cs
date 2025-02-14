@@ -15,9 +15,14 @@ internal class Program
         //TimeFunction(() => GrayScale(imageBitmap), nameof(GrayScale)).Save("GrayScale.png", ImageFormat.Png);
         //TimeFunction(() => Invert(imageBitmap), nameof(Invert)).Save("Invert.png", ImageFormat.Png);
 
-        TimeFunction(() => Base(imageBitmap, new() { GreyScale }), nameof(Base)).Save("GreyScale.png", ImageFormat.Png);
-        TimeFunction(() => Base(imageBitmap, new() { Invert }), nameof(Base)).Save("Invert.png", ImageFormat.Png);
-        TimeFunction(() => Base(imageBitmap, new() { GreyScale, Invert }), nameof(Base)).Save("GreyScaleInvert.png", ImageFormat.Png);
+        var _ = TimeFunction(() => Base(imageBitmap, new() { GreyScale }), nameof(Base));
+        _.Bitmap.Save($"{string.Join("-", _.ProcessesUsed)}.png", ImageFormat.Png);
+
+        _ = TimeFunction(() => Base(imageBitmap, new() { Invert }), nameof(Base));
+        _.Bitmap.Save($"{string.Join("-", _.ProcessesUsed)}.png", ImageFormat.Png);
+
+        _ = TimeFunction(() => Base(imageBitmap, new() { GreyScale, Invert }), nameof(Base));
+        _.Bitmap.Save($"{string.Join("-", _.ProcessesUsed)}.png", ImageFormat.Png);
     }
 
     static T TimeFunction<T>(Func<T> function, string name)
@@ -31,7 +36,7 @@ internal class Program
         return result;
     }
 
-    static private Bitmap Base(Bitmap original, List<Action<int, int, byte[], int, int>> actions)
+    static private Result Base(Bitmap original, List<Action<int, int, byte[], int, int>> actions)
     {
         var bitmapX = original.Size.Width;
         var bitmapY = original.Size.Height;
@@ -52,17 +57,19 @@ internal class Program
         IntPtr ptrFirstPixel = bitmapData.Scan0;
         Marshal.Copy(ptrFirstPixel, pixels, 0, pixels.Length);
 
-        string saveName = string.Empty;
         foreach (var action in actions)
         {
-            saveName += action.Method.Name;
             action(bitmapX, bitmapY, pixels, bitmapData.Stride, bytesPerPixel);
         }
 
         Marshal.Copy(pixels, 0, ptrFirstPixel, pixels.Length);
         bitmapCopy.UnlockBits(bitmapData);
 
-        return bitmapCopy;
+        return new Result 
+        {
+            Bitmap = bitmapCopy,
+            ProcessesUsed = actions.Select(x => x.Method.Name).ToArray()
+        };
     }
 
     private static void Invert(int bitmapX, int bitmapY, byte[] pixels, int stride, int bytesPerPixel)
@@ -202,6 +209,12 @@ internal class Program
             return new Bitmap(path);
         }
         return new Bitmap(0,0);
+    }
+
+    public class Result
+    {
+        public Bitmap Bitmap { get; set; }
+        public string[] ProcessesUsed { get; set; }
     }
 
 }
