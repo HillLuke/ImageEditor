@@ -12,9 +12,6 @@ internal class Program
         //Loads from bin folder
         var imageBitmap = TimeFunction(() => LoadFromPath("load.jpg"), nameof(LoadFromPath));
 
-        //TimeFunction(() => GrayScale(imageBitmap), nameof(GrayScale)).Save("GrayScale.png", ImageFormat.Png);
-        //TimeFunction(() => Invert(imageBitmap), nameof(Invert)).Save("Invert.png", ImageFormat.Png);
-
         var _ = TimeFunction(() => Base(imageBitmap, new() { GreyScale }), nameof(Base));
         _.Bitmap.Save($"{string.Join("-", _.ProcessesUsed)}.png", ImageFormat.Png);
 
@@ -114,94 +111,6 @@ internal class Program
         });
     }
 
-    static private Bitmap Invert(Bitmap original)
-    {
-        var bitmapX = original.Size.Width;
-        var bitmapY = original.Size.Height;
-        var bitmapCopy = new Bitmap(bitmapX, bitmapY, PixelFormat.Format24bppRgb);
-        
-        //copy the original bitmap to the new bitmap
-        using (var g = Graphics.FromImage(bitmapCopy))
-        {
-            g.DrawImage(original, 0, 0, bitmapX, bitmapY);
-        }
-
-        var rect = new Rectangle(0, 0, bitmapCopy.Width, bitmapCopy.Height);
-        var bitmapData = bitmapCopy.LockBits(rect, ImageLockMode.ReadWrite, bitmapCopy.PixelFormat);
-        
-        int bytesPerPixel = Image.GetPixelFormatSize(bitmapCopy.PixelFormat) / 8;
-        int byteCount = bitmapData.Stride * bitmapCopy.Height;
-        byte[] pixels = new byte[byteCount];
-        IntPtr ptrFirstPixel = bitmapData.Scan0;
-        Marshal.Copy(ptrFirstPixel, pixels, 0, pixels.Length);
-
-        Parallel.For(0, bitmapX, x =>
-        {
-            for (int y = 0; y < bitmapY; y++)
-            {
-                var index = (y * bitmapData.Stride) + (x * bytesPerPixel);
-                int r = pixels[index + 2];
-                int g = pixels[index + 1];
-                int b = pixels[index];
-
-                int invertedR = 255 - r;
-                int invertedG = 255 - g;
-                int invertedB = 255 - b;
-
-                pixels[index] = (byte)invertedR;
-                pixels[index + 1] = (byte)invertedG;
-                pixels[index + 2] = (byte)invertedB;
-            }
-        });
-
-        Marshal.Copy(pixels, 0, ptrFirstPixel, pixels.Length);
-        bitmapCopy.UnlockBits(bitmapData);
-        return bitmapCopy;
-    }
-
-    static private Bitmap GrayScale(Bitmap original)
-    {
-        var bitmapX = original.Size.Width;
-        var bitmapY = original.Size.Height;
-        var bitmapCopy = new Bitmap(bitmapX, bitmapY, PixelFormat.Format24bppRgb);
-        
-        //copy the original bitmap to the new bitmap
-        using (var g = Graphics.FromImage(bitmapCopy))
-        {
-            g.DrawImage(original, 0, 0, bitmapX, bitmapY);
-        }
-
-        var rect = new Rectangle(0, 0, bitmapCopy.Width, bitmapCopy.Height);
-        var bitmapData = bitmapCopy.LockBits(rect, ImageLockMode.ReadWrite, bitmapCopy.PixelFormat);
-        
-        int bytesPerPixel = Image.GetPixelFormatSize(bitmapCopy.PixelFormat) / 8;
-        int byteCount = bitmapData.Stride * bitmapCopy.Height;
-        byte[] pixels = new byte[byteCount];
-        IntPtr ptrFirstPixel = bitmapData.Scan0;
-        Marshal.Copy(ptrFirstPixel, pixels, 0, pixels.Length);
-
-        Parallel.For(0, bitmapX, x =>
-        {
-            for (int y = 0; y < bitmapY; y++)
-            {
-                var index = (y * bitmapData.Stride) + (x * bytesPerPixel);
-                int r = pixels[index + 2];
-                int g = pixels[index + 1];
-                int b = pixels[index];
-
-                int gray = (r + g + b) / 3;
-
-                pixels[index] = (byte)gray;
-                pixels[index + 1] = (byte)gray;
-                pixels[index + 2] = (byte)gray;
-            }
-        });
-
-        Marshal.Copy(pixels, 0, ptrFirstPixel, pixels.Length);
-        bitmapCopy.UnlockBits(bitmapData);
-        return bitmapCopy;
-    }
-
     static private Bitmap LoadFromPath(string path)
     {
         if (File.Exists(path))
@@ -216,5 +125,4 @@ internal class Program
         public Bitmap Bitmap { get; init; }
         public string[] ProcessesUsed { get; init; }
     }
-
 }
