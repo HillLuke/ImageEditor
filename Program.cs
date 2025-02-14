@@ -211,10 +211,10 @@ internal class Program
         return new Bitmap(0,0);
     }
 
-    public class Result
+    public record Result
     {
-        public Bitmap Bitmap { get; set; }
-        public string[] ProcessesUsed { get; set; }
+        public Bitmap Bitmap { get; init; }
+        public string[] ProcessesUsed { get; init; }
     }
 
 }
