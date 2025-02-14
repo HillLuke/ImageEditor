@@ -15,9 +15,9 @@ internal class Program
         //TimeFunction(() => GrayScale(imageBitmap), nameof(GrayScale)).Save("GrayScale.png", ImageFormat.Png);
         //TimeFunction(() => Invert(imageBitmap), nameof(Invert)).Save("Invert.png", ImageFormat.Png);
 
-        TimeFunction(() => Base2(imageBitmap, new() { GreyScale }), nameof(Base2)).Save("GreyScale.png", ImageFormat.Png);
-        TimeFunction(() => Base2(imageBitmap, new() { Invert }), nameof(Base2)).Save("Invert.png", ImageFormat.Png);
-        TimeFunction(() => Base2(imageBitmap, new() { GreyScale, Invert }), nameof(Base2)).Save("GreyScaleInvert.png", ImageFormat.Png);
+        TimeFunction(() => Base(imageBitmap, new() { GreyScale }), nameof(Base)).Save("GreyScale.png", ImageFormat.Png);
+        TimeFunction(() => Base(imageBitmap, new() { Invert }), nameof(Base)).Save("Invert.png", ImageFormat.Png);
+        TimeFunction(() => Base(imageBitmap, new() { GreyScale, Invert }), nameof(Base)).Save("GreyScaleInvert.png", ImageFormat.Png);
     }
 
     static T TimeFunction<T>(Func<T> function, string name)
@@ -31,7 +31,7 @@ internal class Program
         return result;
     }
 
-    static private Bitmap Base2(Bitmap original, List<Action<int, int, byte[], int, int>> actions)
+    static private Bitmap Base(Bitmap original, List<Action<int, int, byte[], int, int>> actions)
     {
         var bitmapX = original.Size.Width;
         var bitmapY = original.Size.Height;
